@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoCryptic — Kartograph Vector World Map Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- D3.js and D3-Geo Projections (Kartograph Vector Engine Core) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Kartograph SVG Map Styling */
+        #map-container {
+            width: 100%;
+            height: 100%;
+            min-h: 480px;
+            background: #090d16;
+            cursor: crosshair;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kartograph-land {
+            fill: #1e293b;
+            stroke: #334155;
+            stroke-width: 0.5px;
+            transition: fill 0.2s ease, stroke 0.2s ease;
+        }
+        
+        .kartograph-land:hover {
+            fill: #26334d;
+            stroke: #475569;
+        }
+
+        .kartograph-graticule {
+            fill: none;
+            stroke: #1e293b;
+            stroke-width: 0.5px;
+            stroke-dasharray: 2 2;
+            opacity: 0.6;
+        }
+
+        .kartograph-sphere {
+            fill: #090d16;
+            stroke: #334155;
+            stroke-width: 1px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-dark-950 text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-dark-900/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+                    <i class="fa-solid fa-map-location-dot text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">GeoCryptic</h1>
+                    <p class="text-xs text-slate-400 font-medium tracking-wide">Kartograph Vector Earth Edition</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="openStatsModal()" class="flex items-center space-x-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 transition shadow-sm">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+                    <span class="hidden sm:inline">Statistics</span>
+                </button>
+                <button onclick="openHelpModal()" class="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 rounded-lg text-slate-300 transition shadow-sm">
+                    <i class="fa-solid fa-question text-sm"></i>
+                </button>
+                <div class="hidden md:flex items-center space-x-2 bg-emerald-950/50 border border-emerald-800/40 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-300">
+                    <i class="fa-solid fa-fire text-amber-400"></i>
+                    <span id="streak-counter">0</span> Streak
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+        
+        <!-- Dashboard Header -->
+        <div id="game-dashboard" class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-dark-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div id="challenge-number-badge" class="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-sm">
+                        Challenge 1/5
+                    </div>
+                    <div>
+                        <span id="challenge-category" class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Global Lore & History</span>
+                        <h2 id="challenge-date-label" class="text-lg font-bold text-white">Daily Expedition #42</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress dots -->
+            <div class="flex items-center space-x-2 self-start md:self-center">
+                <div class="text-xs text-slate-400 mr-2 font-medium hidden sm:inline">Progress:</div>
+                <div id="progress-dots" class="flex space-x-2">
+                    <!-- Dynamic dots -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Split View: Question & Kartograph Vector Map -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[600px]">
+            
+            <!-- Left Panel: Cryptic Riddle -->
+            <div class="lg:col-span-5 flex flex-col bg-dark-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
+                
+                <div class="p-6 flex-1 overflow-y-auto space-y-6">
+                    
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="question-difficulty" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                <i class="fa-solid fa-skull text-[10px] mr-1"></i> Very Hard
+                            </span>
+                            <span id="points-possible" class="text-xs font-bold text-slate-400 mono-font">Max 5,000 pts</span>
+                        </div>
+                        <h3 id="question-title" class="text-xl font-bold text-white tracking-wide leading-snug">
+                            Loading cryptic clue...
+                        </h3>
+                    </div>
+
+                    <!-- Riddle Box -->
+                    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 sm:p-5 relative shadow-inner">
+                        <div class="absolute -top-3 left-4 bg-emerald-600 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider shadow">
+                            Earth Riddle
+                        </div>
+                        <p id="question-clue" class="text-slate-300 text-sm sm:text-base leading-relaxed pt-1 italic font-serif">
+                            Decrypting global coordinates...
+                        </p>
+                    </div>
+
+                    <!-- Hint Button -->
+                    <div>
+                        <button onclick="toggleHint()" id="hint-btn" class="w-full py-2.5 px-4 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-semibold text-slate-300 transition flex items-center justify-between">
+                            <span class="flex items-center space-x-2">
+                                <i class="fa-solid fa-compass text-amber-400"></i>
+                                <span id="hint-btn-text">Reveal Satellite Clue (Hint)</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-down text-slate-500 text-xs"></i>
+                        </button>
+                        <div id="hint-container" class="hidden mt-2 p-3.5 bg-amber-950/30 border border-amber-800/40 rounded-xl text-amber-200/90 text-xs leading-relaxed">
+                            <strong class="block text-amber-400 mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Clue:</strong>
+                            <span id="hint-text">No hint available.</span>
+                        </div>
+                    </div>
+
+                    <!-- Result Card -->
+                    <div id="result-card" class="hidden space-y-4 bg-slate-950/90 border border-slate-800 rounded-xl p-5 animate-fade-in shadow-2xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Round Score</span>
+                                <div class="text-3xl font-extrabold text-emerald-400 mono-font" id="round-score">0 <span class="text-sm font-normal text-slate-400">/ 5,000</span></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Distance Off</span>
+                                <div class="text-lg font-bold text-amber-300 mono-font" id="round-distance">0 km</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs uppercase font-bold text-emerald-400 tracking-wider mb-1"><i class="fa-solid fa-book-bookmark mr-1"></i> Location Discovered</h4>
+                            <p id="round-fact" class="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-900/80 p-3.5 rounded-lg border border-slate-800/80">
+                                Fact details...
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between gap-3">
+                    <div id="selection-status" class="text-xs font-medium text-slate-400 truncate">
+                        <i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> <span id="status-text">Click anywhere on the vector map to drop pin</span>
+                    </div>
+                    <button id="submit-guess-btn" onclick="submitGuess()" disabled class="bg-emerald-600/50 text-white/50 cursor-not-allowed font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-lg flex items-center space-x-2 shrink-0">
+                        <span>Confirm Pin</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                    <button id="next-round-btn" onclick="nextRound()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/40 flex items-center space-x-2 shrink-0">
+                        <span id="next-btn-text">Next Location</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right: Kartograph D3 Vector Map Canvas -->
+            <div class="lg:col-span-7 flex flex-col bg-dark-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative min-h-[480px]">
+                <div id="map-container">
+                    <svg id="kartograph-svg" class="w-full h-full"></svg>
+                </div>
+
+                <!-- Map Helper Info Banner -->
+                <div class="absolute bottom-4 left-4 right-4 z-10 bg-dark-900/90 backdrop-blur-md border border-slate-700 px-4 py-2.5 rounded-xl shadow-2xl flex items-center justify-between text-xs font-medium text-slate-300 pointer-events-none">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-hand-pointer text-emerald-400 animate-bounce"></i>
+                        <span>Kartograph SVG Projection • Drag & Scroll to Zoom/Pan</span>
+                    </div>
+                    <span id="pin-coords" class="mono-font text-emerald-400/90 hidden sm:inline">No pin placed</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modals -->
+    <div id="stats-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-dark-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 relative">
+            <button onclick="closeStatsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Player Statistics</h3>
+                <p class="text-xs text-slate-400">Lifetime GeoCryptic records</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl">
+                    <div id="stat-played" class="text-2xl font-extrabold text-white mono-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase font-bold mt-1">Played</div>
+                </div>
+                <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl">
+                    <div id="stat-streak" class="text-2xl font-extrabold text-amber-400 mono-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase font-bold mt-1">Streak</div>
+                </div>
+                <div class="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl">
+                    <div id="stat-avg-score" class="text-2xl font-extrabold text-emerald-400 mono-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase font-bold mt-1">Avg Pts</div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Recent Games</h4>
+                <div id="stats-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+            </div>
+
+            <button onclick="closeStatsModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-sm transition">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-dark-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-circle-question"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">How to Play GeoCryptic</h3>
+                    <p class="text-xs text-slate-400">Rules of the Earth Geography Challenge</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
+                    <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">1</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">5 Daily Cryptic Clues</strong>
+                        Every daily challenge presents 5 challenging clues spanning history, engineering, nature, and pop culture secrets around the globe.
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
+                    <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">2</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">Kartograph SVG Vector Map</strong>
+                        Click anywhere on the projected vector map to pin your target. You can zoom in and out with your mouse wheel or drag to pan around.
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
+                    <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">3</div>
+                    <div>
+                        <strong class="text-white block mb-0.5">Geodesic Scoring</strong>
+                        Earn up to 5,000 points per round based on how close your coordinates land relative to the real Earth location.
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeHelpModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/40">
+                Start Expedition
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Modal -->
+    <div id="summary-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-dark-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative text-center">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 flex items-center justify-center mx-auto text-2xl shadow-xl shadow-emerald-900/40">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h3 class="text-2xl font-extrabold text-white tracking-wide">Daily Expedition Complete!</h3>
+                <p class="text-xs text-slate-400 mt-1" id="summary-date-subtitle">GeoCryptic Earth Challenge #42</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-slate-950 to-dark-950 border border-slate-800 p-6 rounded-2xl flex items-center justify-around">
+                <div>
+                    <span class="text-xs uppercase font-bold text-slate-400 tracking-wider block mb-1">Total Score</span>
+                    <div class="text-4xl font-extrabold text-emerald-400 mono-font" id="summary-total-score">0 <span class="text-sm font-normal text-slate-400">/ 25k</span></div>
+                </div>
+                <div class="h-10 w-px bg-slate-800"></div>
+                <div>
+                    <span class="text-xs uppercase font-bold text-slate-400 tracking-wider block mb-1">Streak</span>
+                    <div class="text-4xl font-extrabold text-amber-400 mono-font flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-fire text-2xl"></i>
+                        <span id="summary-streak">1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2 text-left">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Share Results</span>
+                    <span class="text-[10px] text-emerald-400">Wordle-Style Grid</span>
+                </div>
+                <div id="emoji-grid-display" class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl mono-font text-sm text-center tracking-widest text-slate-200">
+                    🟩🟨🟥⬛🟩
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="shareResults()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>Share Score</span>
+                </button>
+                <button onclick="closeSummaryModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition">
+                    View Map
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Kartograph Vector Engine & Game Logic -->
+    <script>
+        // 5 Real World Hard Cryptic Location Challenges
+        const EARTH_CHALLENGES = [
+            {
+                id: 1,
+                category: "Ancient Engineering",
+                difficulty: "Hard",
+                title: "The Door to Hell",
+                clue: "In 1971, Soviet geologists accidentally punctured a cavern filled with natural gas in a remote desert. They set it on fire expecting it to burn out in days—it has been burning continuously ever since.",
+                hint: "Located in the Karakum Desert of Turkmenistan (Darvaza Gas Crater).",
+                lat: 40.2526,
+                lng: 58.4397,
+                name: "Darvaza Gas Crater, Turkmenistan",
+                fact: "The fiery crater is 69 meters wide and 30 meters deep. It glows visibly at night across miles of desert."
+            },
+            {
+                id: 2,
+                category: "Geological Marvels",
+                difficulty: "Very Hard",
+                title: "The Structure of the Sahara",
+                clue: "A prominent 40-kilometer wide circular geological feature in the desert that resembles a giant bullseye when viewed from space, originally used as a landmark by early astronaut missions.",
+                hint: "Situated near Ouadane in west-central Mauritania (Richat Structure / Eye of the Sahara).",
+                lat: 21.1269,
+                lng: -11.4016,
+                name: "The Eye of the Sahara, Mauritania",
+                fact: "Once thought to be an impact crater, scientists now believe it is a deeply eroded, giant dome of sedimentary rocks."
+            },
+            {
+                id: 3,
+                category: "Maritime History",
+                difficulty: "Hard",
+                title: "The End of the World Lighthouse",
+                clue: "Perched on a desolate rocky islet at the southern tip of South America, this iconic red-and-white striped beacon marks the treacherous junction between the Atlantic and Pacific oceans.",
+                hint: "Located in the Beagle Channel near Ushuaia, Argentina (Les Eclaireurs Lighthouse).",
+                lat: -54.8725,
+                lng: -68.0872,
+                name: "Les Eclaireurs Lighthouse, Tierra del Fuego",
+                fact: "Often confused with Jules Verne's fictional 'Lighthouse at the End of the World', which was built further east on Isla de los Estados."
+            },
+            {
+                id: 4,
+                category: "Lost Civilizations",
+                difficulty: "Very Hard",
+                title: "The Fortress of the Clouds",
+                clue: "Built by the 'Warriors of the Clouds' high in the Andes forest, this colossal stone citadel features massive outer walls up to 20 meters high, pre-dating the Inca Empire by centuries.",
+                hint: "Located in the Utcubamba Valley of northern Peru (Kuélap Citadel).",
+                lat: -6.4186,
+                lng: -77.9714,
+                name: "Kuélap Citadel, Peru",
+                fact: "Kuélap sits at 3,000 meters altitude and contains over 400 circular stone dwellings built by the Chachapoyas culture."
+            },
+            {
+                id: 5,
+                category: "Scientific Landmarks",
+                difficulty: "Hard",
+                title: "The Global Seed Vault",
+                clue: "Buried deep inside a frozen mountain inside a former coal mine on a remote Arctic archipelago, this sanctuary safeguards over 1 million crop seeds against global extinction events.",
+                hint: "Located on Spitsbergen island, Norway (Svalbard Global Seed Vault).",
+                lat: 78.2380,
+                lng: 15.4926,
+                name: "Svalbard Global Seed Vault, Norway",
+                fact: "Built to withstand earthquakes, nuclear strikes, and rising sea levels, keeping seeds viable for centuries at -18°C."
+            }
+        ];
+
+        let currentRound = 0;
+        let totalScore = 0;
+        let roundScores = [];
+        let distances = [];
+        let userPin = null; // {lat, lng}
+        let isAnswerSubmitted = false;
+
+        // Kartograph SVG state
+        let svg, gMap, gMarkers, projection, path, zoom;
+
+        // User state
+        let gameState = JSON.parse(localStorage.getItem('geocryptic_world_state')) || {
+            streak: 0,
+            history: []
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initKartographMap();
+            loadRound(currentRound);
+            updateDashboard();
+            updateStreakDisplay();
+        });
+
+        function updateDashboard() {
+            const label = document.getElementById('challenge-date-label');
+            if (label) {
+                label.innerText = `Daily Expedition #${new Date().getDate() + 41}`;
+            }
+        }
+
+        // --- Kartograph Vector Map Setup (D3 + TopoJSON Robinson Projection) ---
+        function initKartographMap() {
+            const container = document.getElementById('map-container');
+            const width = container.clientWidth || 800;
+            const height = container.clientHeight || 500;
+
+            svg = d3.select("#kartograph-svg")
+                .attr("viewBox", `0 0 ${width} ${height}`);
+
+            // Natural Earth Robinson projection style (Kartograph engine feature)
+            projection = d3.geoRobinson()
+                .scale(width / 5.8)
+                .translate([width / 2, height / 2]);
+
+            path = d3.geoPath().projection(projection);
+
+            // Zoom & Pan handler
+            zoom = d3.zoom()
+                .scaleExtent([1, 12])
+                .on("zoom", (event) => {
+                    gMap.attr("transform", event.transform);
+                    gMarkers.attr("transform", event.transform);
+                });
+
+            svg.call(zoom);
+
+            // Group elements
+            gMap = svg.append("g").attr("class", "map-group");
+            gMarkers = svg.append("g").attr("class", "markers-group");
+
+            // Draw Sphere / Ocean
+            gMap.append("path")
+                .datum({type: "Sphere"})
+                .attr("class", "kartograph-sphere")
+                .attr("d", path);
+
+            // Draw Graticule lines
+            const graticule = d3.geoGraticule10();
+            gMap.append("path")
+                .datum(graticule)
+                .attr("class", "kartograph-graticule")
+                .attr("d", path);
+
+            // Fetch World TopoJSON for Kartograph rendering
+            fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
+                .then(res => res.json())
+                .then(world => {
+                    const land = topojson.feature(world, world.objects.land);
+                    gMap.selectAll(".kartograph-land")
+                        .data(land.features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "kartograph-land")
+                        .attr("d", path);
+                })
+                .catch(() => {
+                    // Fallback simplistic land boundaries if network is restricted
+                    console.log("Using fallback vector rendering");
+                });
+
+            // Map Click listener for pin drop
+            svg.on("click", function(event) {
+                if (isAnswerSubmitted) return;
+                
+                // Convert screen click point to Geo Coordinates
+                const [mouseX, mouseY] = d3.pointer(event, svg.node());
+                
+                // Adjust pointer relative to current zoom transformation
+                const transform = d3.zoomTransform(svg.node());
+                const invertedX = (mouseX - transform.x) / transform.k;
+                const invertedY = (mouseY - transform.y) / transform.k;
+
+                const coords = projection.invert([invertedX, invertedY]);
+                if (coords && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                    setUserPin(coords[1], coords[0]);
+                }
+            });
+        }
+
+        function setUserPin(lat, lng) {
+            userPin = { lat, lng };
+
+            gMarkers.selectAll(".user-pin").remove();
+
+            const point = projection([lng, lat]);
+            if (!point) return;
+
+            const userGroup = gMarkers.append("g")
+                .attr("class", "user-pin")
+                .attr("transform", `translate(${point[0]}, ${point[1]})`);
+
+            // Animated Pin Marker
+            userGroup.append("circle")
+                .attr("r", 7)
+                .attr("fill", "#10b981")
+                .attr("stroke", "#ffffff")
+                .attr("stroke-width", 2)
+                .attr("shadow", "0 0 10px #10b981");
+
+            userGroup.append("circle")
+                .attr("r", 14)
+                .attr("fill", "none")
+                .attr("stroke", "#10b981")
+                .attr("stroke-width", 1.5)
+                .attr("opacity", 0.6);
+
+            document.getElementById('status-text').innerText = `Pin placed at Lat: ${lat.toFixed(3)}, Lng: ${lng.toFixed(3)}`;
+            document.getElementById('pin-coords').innerText = `Coords: ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+
+            const submitBtn = document.getElementById('submit-guess-btn');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-emerald-600/50', 'text-white/50', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500', 'text-white', 'cursor-pointer');
+        }
+
+        // --- Game Round Lifecycle ---
+        function loadRound(index) {
+            currentRound = index;
+            isAnswerSubmitted = false;
+            userPin = null;
+
+            const challenge = EARTH_CHALLENGES[index];
+
+            // Update Challenge Texts
+            document.getElementById('challenge-number-badge').innerText = `Challenge ${index + 1}/5`;
+            document.getElementById('challenge-category').innerText = challenge.category;
+            document.getElementById('question-difficulty').innerHTML = `<i class="fa-solid fa-skull text-[10px] mr-1"></i> ${challenge.difficulty}`;
+            document.getElementById('question-title').innerText = challenge.title;
+            document.getElementById('question-clue').innerText = challenge.clue;
+
+            // Reset Hint
+            document.getElementById('hint-container').classList.add('hidden');
+            document.getElementById('hint-btn-text').innerText = "Reveal Satellite Clue (Hint)";
+            document.getElementById('hint-text').innerText = challenge.hint;
+
+            // Reset UI states
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('submit-guess-btn').classList.remove('hidden');
+            document.getElementById('next-round-btn').classList.add('hidden');
+            document.getElementById('status-text').innerText = "Click anywhere on the vector map to drop pin";
+            document.getElementById('pin-coords').innerText = "No pin placed";
+
+            // Disable submit button until pin dropped
+            const submitBtn = document.getElementById('submit-guess-btn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('bg-emerald-600/50', 'text-white/50', 'cursor-not-allowed');
+            submitBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500', 'text-white', 'cursor-pointer');
+
+            // Clear previous round map markers
+            if (gMarkers) gMarkers.selectAll("*").remove();
+
+            // Reset map zoom
+            if (svg && zoom) {
+                svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+            }
+
+            updateProgressDots();
+        }
+
+        function updateProgressDots() {
+            const container = document.getElementById('progress-dots');
+            container.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition ${
+                    i < currentRound ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-900/50' :
+                    i === currentRound ? 'bg-emerald-500/20 border border-emerald-500 text-emerald-400' :
+                    'bg-slate-800 text-slate-500'
+                }`;
+                dot.innerText = i + 1;
+                container.appendChild(dot);
+            }
+        }
+
+        function toggleHint() {
+            const container = document.getElementById('hint-container');
+            container.classList.toggle('hidden');
+            if (!container.classList.contains('hidden')) {
+                document.getElementById('hint-btn-text').innerText = "Hide Clue";
+            } else {
+                document.getElementById('hint-btn-text').innerText = "Reveal Satellite Clue (Hint)";
+            }
+        }
+
+        // Calculate Geodesic Distance in km using Haversine Formula
+        function getHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function submitGuess() {
+            if (!userPin || isAnswerSubmitted) return;
+            isAnswerSubmitted = true;
+
+            const challenge = EARTH_CHALLENGES[currentRound];
+            const distKm = getHaversineDistance(userPin.lat, userPin.lng, challenge.lat, challenge.lng);
+            distances.push(distKm);
+
+            // Scoring decay formula: max 5000 points
+            let score = Math.round(5000 * Math.exp(-distKm / 2000));
+            if (distKm < 25) score = 5000;
+            roundScores.push(score);
+            totalScore += score;
+
+            // Render Target Location Marker on Kartograph Map
+            const userPt = projection([userPin.lng, userPin.lat]);
+            const targetPt = projection([challenge.lng, challenge.lat]);
+
+            if (userPt && targetPt) {
+                // Connecting Great Circle / Dashed Line
+                gMarkers.append("line")
+                    .attr("x1", userPt[0])
+                    .attr("y1", userPt[1])
+                    .attr("x2", targetPt[0])
+                    .attr("y2", targetPt[1])
+                    .attr("stroke", "#f43f5e")
+                    .attr("stroke-width", 2)
+                    .attr("stroke-dasharray", "4,4");
+
+                // Target Location Marker
+                const targetGroup = gMarkers.append("g")
+                    .attr("class", "target-pin")
+                    .attr("transform", `translate(${targetPt[0]}, ${targetPt[1]})`);
+
+                targetGroup.append("circle")
+                    .attr("r", 8)
+                    .attr("fill", "#3b82f6")
+                    .attr("stroke", "#ffffff")
+                    .attr("stroke-width", 2);
+
+                targetGroup.append("text")
+                    .attr("y", -12)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#60a5fa")
+                    .attr("font-size", "10px")
+                    .attr("font-weight", "bold")
+                    .text(challenge.name);
+            }
+
+            // Update UI
+            document.getElementById('submit-guess-btn').classList.add('hidden');
+            document.getElementById('next-round-btn').classList.remove('hidden');
+
+            if (currentRound === 4) {
+                document.getElementById('next-btn-text').innerText = "View Expedition Summary";
+            } else {
+                document.getElementById('next-btn-text').innerText = "Next Location";
+            }
+
+            document.getElementById('round-score').innerHTML = `${score.toLocaleString()} <span class="text-sm font-normal text-slate-400">/ 5,000</span>`;
+            document.getElementById('round-distance').innerText = `${Math.round(distKm).toLocaleString()} km`;
+            document.getElementById('round-fact').innerText = `${challenge.name} — ${challenge.fact}`;
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('status-text').innerText = "Answer location revealed on vector map!";
+        }
+
+        function nextRound() {
+            if (currentRound < 4) {
+                loadRound(currentRound + 1);
+            } else {
+                finishGame();
+            }
+        }
+
+        // --- Summary & Share ---
+        function finishGame() {
+            gameState.streak += 1;
+            gameState.history.unshift({
+                date: new Date().toLocaleDateString(),
+                score: totalScore
+            });
+            localStorage.setItem('geocryptic_world_state', JSON.stringify(gameState));
+
+            updateStreakDisplay();
+
+            document.getElementById('summary-total-score').innerHTML = `${totalScore.toLocaleString()} <span class="text-sm font-normal text-slate-400">/ 25k</span>`;
+            document.getElementById('summary-streak').innerText = gameState.streak;
+
+            // Wordle-Style Emoji Grid
+            let gridHtml = roundScores.map(s => {
+                if (s >= 4000) return '🟩';
+                if (s >= 2000) return '🟨';
+                return '🟥';
+            }).join(' ');
+            document.getElementById('emoji-grid-display').innerText = gridHtml;
+
+            document.getElementById('summary-modal').classList.remove('hidden');
+            document.getElementById('summary-modal').classList.add('flex');
+        }
+
+        function shareResults() {
+            const grid = roundScores.map(s => s >= 4000 ? '🟩' : s >= 2000 ? '🟨' : '🟥').join('');
+            const text = `GeoCryptic Kartograph Challenge\nScore: ${totalScore.toLocaleString()} / 25,000 🌍\nStreak: ${gameState.streak} 🔥\n${grid}`;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alertBox("Score copied to clipboard!");
+            } catch (err) {
+                alertBox("Failed to copy results.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function alertBox(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl animate-fade-in flex items-center space-x-2';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function updateStreakDisplay() {
+            document.getElementById('streak-counter').innerText = gameState.streak;
+        }
+
+        function openStatsModal() {
+            document.getElementById('stat-played').innerText = gameState.history.length;
+            document.getElementById('stat-streak').innerText = gameState.streak;
+            const avg = gameState.history.length ? Math.round(gameState.history.reduce((a,b)=>a+b.score,0)/gameState.history.length) : 0;
+            document.getElementById('stat-avg-score').innerText = avg.toLocaleString();
+
+            const historyList = document.getElementById('stats-history-list');
+            historyList.innerHTML = '';
+            if (gameState.history.length === 0) {
+                historyList.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">No past expeditions played.</div>`;
+            } else {
+                gameState.history.slice(0, 5).forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 text-xs';
+                    row.innerHTML = `<span class="text-slate-400">${item.date}</span><span class="font-bold text-emerald-400 mono-font">${item.score.toLocaleString()} pts</span>`;
+                    historyList.appendChild(row);
+                });
+            }
+
+            document.getElementById('stats-modal').classList.remove('hidden');
+            document.getElementById('stats-modal').classList.add('flex');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.add('hidden');
+            document.getElementById('stats-modal').classList.remove('flex');
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+            document.getElementById('help-modal').classList.add('flex');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
+            document.getElementById('help-modal').classList.remove('flex');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summary-modal').classList.add('hidden');
+            document.getElementById('summary-modal').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
