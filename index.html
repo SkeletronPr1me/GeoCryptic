@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoCryptic — Kartograph Vector World Map Edition</title>
+    <title>GeoCryptic — Kartograph Vector World Map Edition (Day 2)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -45,11 +45,10 @@
             font-family: 'JetBrains Mono', monospace;
         }
         
-        /* Kartograph SVG Map Styling */
         #map-container {
             width: 100%;
             height: 100%;
-            min-h: 480px;
+            min-height: 480px;
             background: #090d16;
             cursor: crosshair;
             position: relative;
@@ -82,7 +81,6 @@
             stroke-width: 1px;
         }
 
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -107,7 +105,7 @@
                 </div>
                 <div>
                     <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">GeoCryptic</h1>
-                    <p class="text-xs text-slate-400 font-medium tracking-wide">Kartograph Vector Earth Edition</p>
+                    <p class="text-xs text-slate-400 font-medium tracking-wide">Day 2 — Vector Earth Edition</p>
                 </div>
             </div>
 
@@ -138,8 +136,8 @@
                         Challenge 1/5
                     </div>
                     <div>
-                        <span id="challenge-category" class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Global Lore & History</span>
-                        <h2 id="challenge-date-label" class="text-lg font-bold text-white">Daily Expedition #42</h2>
+                        <span id="challenge-category" class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Deep Sea Exploration</span>
+                        <h2 id="challenge-date-label" class="text-lg font-bold text-white">Daily Expedition #43 (Day 2)</h2>
                     </div>
                 </div>
             </div>
@@ -147,20 +145,17 @@
             <!-- Progress dots -->
             <div class="flex items-center space-x-2 self-start md:self-center">
                 <div class="text-xs text-slate-400 mr-2 font-medium hidden sm:inline">Progress:</div>
-                <div id="progress-dots" class="flex space-x-2">
-                    <!-- Dynamic dots -->
-                </div>
+                <div id="progress-dots" class="flex space-x-2"></div>
             </div>
         </div>
 
-        <!-- Split View: Question & Kartograph Vector Map -->
+        <!-- Split View -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[600px]">
             
             <!-- Left Panel: Cryptic Riddle -->
             <div class="lg:col-span-5 flex flex-col bg-dark-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
                 
                 <div class="p-6 flex-1 overflow-y-auto space-y-6">
-                    
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <span id="question-difficulty" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
@@ -318,22 +313,15 @@
                 <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
                     <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">1</div>
                     <div>
-                        <strong class="text-white block mb-0.5">5 Daily Cryptic Clues</strong>
-                        Every daily challenge presents 5 challenging clues spanning history, engineering, nature, and pop culture secrets around the globe.
+                        <strong class="text-white block mb-0.5">5 New Day 2 Cryptic Clues</strong>
+                        Fresh multidisciplinary riddles spanning ocean depths, ancient ruins, and extreme geography.
                     </div>
                 </div>
                 <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
                     <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">2</div>
                     <div>
                         <strong class="text-white block mb-0.5">Kartograph SVG Vector Map</strong>
-                        Click anywhere on the projected vector map to pin your target. You can zoom in and out with your mouse wheel or drag to pan around.
-                    </div>
-                </div>
-                <div class="flex items-start space-x-3 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
-                    <div class="w-6 h-6 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">3</div>
-                    <div>
-                        <strong class="text-white block mb-0.5">Geodesic Scoring</strong>
-                        Earn up to 5,000 points per round based on how close your coordinates land relative to the real Earth location.
+                        Click anywhere on the projected vector map to pin your target. Zoom and pan freely.
                     </div>
                 </div>
             </div>
@@ -351,8 +339,8 @@
                 <i class="fa-solid fa-trophy"></i>
             </div>
             <div>
-                <h3 class="text-2xl font-extrabold text-white tracking-wide">Daily Expedition Complete!</h3>
-                <p class="text-xs text-slate-400 mt-1" id="summary-date-subtitle">GeoCryptic Earth Challenge #42</p>
+                <h3 class="text-2xl font-extrabold text-white tracking-wide">Day 2 Expedition Complete!</h3>
+                <p class="text-xs text-slate-400 mt-1" id="summary-date-subtitle">GeoCryptic Earth Challenge (Day 2)</p>
             </div>
 
             <div class="bg-gradient-to-br from-slate-950 to-dark-950 border border-slate-800 p-6 rounded-2xl flex items-center justify-around">
@@ -392,69 +380,68 @@
         </div>
     </div>
 
-    <!-- JavaScript Kartograph Vector Engine & Game Logic -->
     <script>
-        // 5 Real World Hard Cryptic Location Challenges
+        // BRAND NEW DAY 2 CHALLENGES
         const EARTH_CHALLENGES = [
             {
                 id: 1,
-                category: "Ancient Engineering",
-                difficulty: "Hard",
-                title: "The Door to Hell",
-                clue: "In 1971, Soviet geologists accidentally punctured a cavern filled with natural gas in a remote desert. They set it on fire expecting it to burn out in days—it has been burning continuously ever since.",
-                hint: "Located in the Karakum Desert of Turkmenistan (Darvaza Gas Crater).",
-                lat: 40.2526,
-                lng: 58.4397,
-                name: "Darvaza Gas Crater, Turkmenistan",
-                fact: "The fiery crater is 69 meters wide and 30 meters deep. It glows visibly at night across miles of desert."
+                category: "Deep Sea Exploration",
+                difficulty: "Very Hard",
+                title: "The Deepest Trench Abyssal Plain",
+                clue: "Descending nearly 11,000 meters below the Pacific Ocean surface, this crescent-shaped depression marks the deepest known point of Earth's crust.",
+                hint: "Located in the western Pacific Ocean east of the Mariana Islands (Challenger Deep).",
+                lat: 11.3733,
+                lng: 142.5917,
+                name: "Challenger Deep, Mariana Trench",
+                fact: "Pressure at the bottom exceeds 1,000 atmospheres—equivalent to an elephant standing on a human thumb."
             },
             {
                 id: 2,
-                category: "Geological Marvels",
-                difficulty: "Very Hard",
-                title: "The Structure of the Sahara",
-                clue: "A prominent 40-kilometer wide circular geological feature in the desert that resembles a giant bullseye when viewed from space, originally used as a landmark by early astronaut missions.",
-                hint: "Situated near Ouadane in west-central Mauritania (Richat Structure / Eye of the Sahara).",
-                lat: 21.1269,
-                lng: -11.4016,
-                name: "The Eye of the Sahara, Mauritania",
-                fact: "Once thought to be an impact crater, scientists now believe it is a deeply eroded, giant dome of sedimentary rocks."
+                category: "Ancient Architecture",
+                difficulty: "Hard",
+                title: "The Rose City Carved in Stone",
+                clue: "An archaeological city famous for its rock-cut architecture and water conduit system, hidden amidst rugged red sandstone canyons and gorges.",
+                hint: "Located in southern Jordan, carved into the mountains of Wadi Musa (Petra).",
+                lat: 30.3285,
+                lng: 35.4444,
+                name: "Petra, Jordan",
+                fact: "Only about 15% of Petra has been explored by archaeologists; the vast majority remains underground."
             },
             {
                 id: 3,
-                category: "Maritime History",
-                difficulty: "Hard",
-                title: "The End of the World Lighthouse",
-                clue: "Perched on a desolate rocky islet at the southern tip of South America, this iconic red-and-white striped beacon marks the treacherous junction between the Atlantic and Pacific oceans.",
-                hint: "Located in the Beagle Channel near Ushuaia, Argentina (Les Eclaireurs Lighthouse).",
-                lat: -54.8725,
-                lng: -68.0872,
-                name: "Les Eclaireurs Lighthouse, Tierra del Fuego",
-                fact: "Often confused with Jules Verne's fictional 'Lighthouse at the End of the World', which was built further east on Isla de los Estados."
+                category: "Extreme Geography",
+                difficulty: "Very Hard",
+                title: "The Driest Non-Polar Desert",
+                clue: "A high-altitude plateau spanning rainshadows where some weather stations have never recorded a single drop of rain in recorded history.",
+                hint: "Stretching along the Pacific coast of South America west of the Andes (Atacama Desert core).",
+                lat: -23.8634,
+                lng: -69.1328,
+                name: "Atacama Desert, Chile",
+                fact: "Due to its pristine skies and zero light pollution, it hosts the world's most advanced astronomical observatories."
             },
             {
                 id: 4,
-                category: "Lost Civilizations",
-                difficulty: "Very Hard",
-                title: "The Fortress of the Clouds",
-                clue: "Built by the 'Warriors of the Clouds' high in the Andes forest, this colossal stone citadel features massive outer walls up to 20 meters high, pre-dating the Inca Empire by centuries.",
-                hint: "Located in the Utcubamba Valley of northern Peru (Kuélap Citadel).",
-                lat: -6.4186,
-                lng: -77.9714,
-                name: "Kuélap Citadel, Peru",
-                fact: "Kuélap sits at 3,000 meters altitude and contains over 400 circular stone dwellings built by the Chachapoyas culture."
+                category: "Historical Monuments",
+                difficulty: "Hard",
+                title: "The Navel of the World Monoliths",
+                clue: "A remote volcanic island dotted with hundreds of monumental monolithic human figures carved by the Rapa Nui people between 1250 and 1500 CE.",
+                hint: "Located in the southeastern Pacific Ocean (Easter Island / Rapa Nui).",
+                lat: -27.1127,
+                lng: -109.3497,
+                name: "Rapa Nui (Easter Island)",
+                fact: "Nearly all moai statues have bodies buried beneath the soil, contrary to the popular belief that only heads exist."
             },
             {
                 id: 5,
-                category: "Scientific Landmarks",
+                category: "Geological Marvels",
                 difficulty: "Hard",
-                title: "The Global Seed Vault",
-                clue: "Buried deep inside a frozen mountain inside a former coal mine on a remote Arctic archipelago, this sanctuary safeguards over 1 million crop seeds against global extinction events.",
-                hint: "Located on Spitsbergen island, Norway (Svalbard Global Seed Vault).",
-                lat: 78.2380,
-                lng: 15.4926,
-                name: "Svalbard Global Seed Vault, Norway",
-                fact: "Built to withstand earthquakes, nuclear strikes, and rising sea levels, keeping seeds viable for centuries at -18°C."
+                title: "The Giant's Causeway",
+                clue: "An area of about 40,000 interlocking basalt columns, the result of an ancient volcanic fissure eruption that cooled rapidly into geometric polygons.",
+                hint: "Located on the northeast coast of Northern Ireland, near Bushmills.",
+                lat: 55.2408,
+                lng: -6.5116,
+                name: "Giant's Causeway, Northern Ireland",
+                fact: "Most of the columns are hexagonal, though some feature four, five, seven, or eight sides."
             }
         ];
 
@@ -462,14 +449,12 @@
         let totalScore = 0;
         let roundScores = [];
         let distances = [];
-        let userPin = null; // {lat, lng}
+        let userPin = null;
         let isAnswerSubmitted = false;
 
-        // Kartograph SVG state
         let svg, gMap, gMarkers, projection, path, zoom;
 
-        // User state
-        let gameState = JSON.parse(localStorage.getItem('geocryptic_world_state')) || {
+        let gameState = JSON.parse(localStorage.getItem('geocryptic_day2_state')) || {
             streak: 0,
             history: []
         };
@@ -484,11 +469,10 @@
         function updateDashboard() {
             const label = document.getElementById('challenge-date-label');
             if (label) {
-                label.innerText = `Daily Expedition #${new Date().getDate() + 41}`;
+                label.innerText = `Daily Expedition #43 (Day 2)`;
             }
         }
 
-        // --- Kartograph Vector Map Setup (D3 + TopoJSON Robinson Projection) ---
         function initKartographMap() {
             const container = document.getElementById('map-container');
             const width = container.clientWidth || 800;
@@ -497,14 +481,12 @@
             svg = d3.select("#kartograph-svg")
                 .attr("viewBox", `0 0 ${width} ${height}`);
 
-            // Natural Earth Robinson projection style (Kartograph engine feature)
             projection = d3.geoRobinson()
                 .scale(width / 5.8)
                 .translate([width / 2, height / 2]);
 
             path = d3.geoPath().projection(projection);
 
-            // Zoom & Pan handler
             zoom = d3.zoom()
                 .scaleExtent([1, 12])
                 .on("zoom", (event) => {
@@ -514,24 +496,20 @@
 
             svg.call(zoom);
 
-            // Group elements
             gMap = svg.append("g").attr("class", "map-group");
             gMarkers = svg.append("g").attr("class", "markers-group");
 
-            // Draw Sphere / Ocean
             gMap.append("path")
                 .datum({type: "Sphere"})
                 .attr("class", "kartograph-sphere")
                 .attr("d", path);
 
-            // Draw Graticule lines
             const graticule = d3.geoGraticule10();
             gMap.append("path")
                 .datum(graticule)
                 .attr("class", "kartograph-graticule")
                 .attr("d", path);
 
-            // Fetch World TopoJSON for Kartograph rendering
             fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json')
                 .then(res => res.json())
                 .then(world => {
@@ -543,19 +521,11 @@
                         .attr("class", "kartograph-land")
                         .attr("d", path);
                 })
-                .catch(() => {
-                    // Fallback simplistic land boundaries if network is restricted
-                    console.log("Using fallback vector rendering");
-                });
+                .catch(() => {});
 
-            // Map Click listener for pin drop
             svg.on("click", function(event) {
                 if (isAnswerSubmitted) return;
-                
-                // Convert screen click point to Geo Coordinates
                 const [mouseX, mouseY] = d3.pointer(event, svg.node());
-                
-                // Adjust pointer relative to current zoom transformation
                 const transform = d3.zoomTransform(svg.node());
                 const invertedX = (mouseX - transform.x) / transform.k;
                 const invertedY = (mouseY - transform.y) / transform.k;
@@ -569,7 +539,6 @@
 
         function setUserPin(lat, lng) {
             userPin = { lat, lng };
-
             gMarkers.selectAll(".user-pin").remove();
 
             const point = projection([lng, lat]);
@@ -579,13 +548,11 @@
                 .attr("class", "user-pin")
                 .attr("transform", `translate(${point[0]}, ${point[1]})`);
 
-            // Animated Pin Marker
             userGroup.append("circle")
                 .attr("r", 7)
                 .attr("fill", "#10b981")
                 .attr("stroke", "#ffffff")
-                .attr("stroke-width", 2)
-                .attr("shadow", "0 0 10px #10b981");
+                .attr("stroke-width", 2);
 
             userGroup.append("circle")
                 .attr("r", 14)
@@ -603,7 +570,6 @@
             submitBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500', 'text-white', 'cursor-pointer');
         }
 
-        // --- Game Round Lifecycle ---
         function loadRound(index) {
             currentRound = index;
             isAnswerSubmitted = false;
@@ -611,35 +577,29 @@
 
             const challenge = EARTH_CHALLENGES[index];
 
-            // Update Challenge Texts
             document.getElementById('challenge-number-badge').innerText = `Challenge ${index + 1}/5`;
             document.getElementById('challenge-category').innerText = challenge.category;
             document.getElementById('question-difficulty').innerHTML = `<i class="fa-solid fa-skull text-[10px] mr-1"></i> ${challenge.difficulty}`;
             document.getElementById('question-title').innerText = challenge.title;
             document.getElementById('question-clue').innerText = challenge.clue;
 
-            // Reset Hint
             document.getElementById('hint-container').classList.add('hidden');
             document.getElementById('hint-btn-text').innerText = "Reveal Satellite Clue (Hint)";
             document.getElementById('hint-text').innerText = challenge.hint;
 
-            // Reset UI states
             document.getElementById('result-card').classList.add('hidden');
             document.getElementById('submit-guess-btn').classList.remove('hidden');
             document.getElementById('next-round-btn').classList.add('hidden');
             document.getElementById('status-text').innerText = "Click anywhere on the vector map to drop pin";
             document.getElementById('pin-coords').innerText = "No pin placed";
 
-            // Disable submit button until pin dropped
             const submitBtn = document.getElementById('submit-guess-btn');
             submitBtn.disabled = true;
             submitBtn.classList.add('bg-emerald-600/50', 'text-white/50', 'cursor-not-allowed');
             submitBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500', 'text-white', 'cursor-pointer');
 
-            // Clear previous round map markers
             if (gMarkers) gMarkers.selectAll("*").remove();
 
-            // Reset map zoom
             if (svg && zoom) {
                 svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
             }
@@ -672,9 +632,8 @@
             }
         }
 
-        // Calculate Geodesic Distance in km using Haversine Formula
         function getHaversineDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth radius in km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -692,18 +651,15 @@
             const distKm = getHaversineDistance(userPin.lat, userPin.lng, challenge.lat, challenge.lng);
             distances.push(distKm);
 
-            // Scoring decay formula: max 5000 points
             let score = Math.round(5000 * Math.exp(-distKm / 2000));
             if (distKm < 25) score = 5000;
             roundScores.push(score);
             totalScore += score;
 
-            // Render Target Location Marker on Kartograph Map
             const userPt = projection([userPin.lng, userPin.lat]);
             const targetPt = projection([challenge.lng, challenge.lat]);
 
             if (userPt && targetPt) {
-                // Connecting Great Circle / Dashed Line
                 gMarkers.append("line")
                     .attr("x1", userPt[0])
                     .attr("y1", userPt[1])
@@ -713,7 +669,6 @@
                     .attr("stroke-width", 2)
                     .attr("stroke-dasharray", "4,4");
 
-                // Target Location Marker
                 const targetGroup = gMarkers.append("g")
                     .attr("class", "target-pin")
                     .attr("transform", `translate(${targetPt[0]}, ${targetPt[1]})`);
@@ -733,7 +688,6 @@
                     .text(challenge.name);
             }
 
-            // Update UI
             document.getElementById('submit-guess-btn').classList.add('hidden');
             document.getElementById('next-round-btn').classList.remove('hidden');
 
@@ -758,26 +712,20 @@
             }
         }
 
-        // --- Summary & Share ---
         function finishGame() {
             gameState.streak += 1;
             gameState.history.unshift({
                 date: new Date().toLocaleDateString(),
                 score: totalScore
             });
-            localStorage.setItem('geocryptic_world_state', JSON.stringify(gameState));
+            localStorage.setItem('geocryptic_day2_state', JSON.stringify(gameState));
 
             updateStreakDisplay();
 
             document.getElementById('summary-total-score').innerHTML = `${totalScore.toLocaleString()} <span class="text-sm font-normal text-slate-400">/ 25k</span>`;
             document.getElementById('summary-streak').innerText = gameState.streak;
 
-            // Wordle-Style Emoji Grid
-            let gridHtml = roundScores.map(s => {
-                if (s >= 4000) return '🟩';
-                if (s >= 2000) return '🟨';
-                return '🟥';
-            }).join(' ');
+            let gridHtml = roundScores.map(s => s >= 4000 ? '🟩' : s >= 2000 ? '🟨' : '🟥').join(' ');
             document.getElementById('emoji-grid-display').innerText = gridHtml;
 
             document.getElementById('summary-modal').classList.remove('hidden');
@@ -786,7 +734,7 @@
 
         function shareResults() {
             const grid = roundScores.map(s => s >= 4000 ? '🟩' : s >= 2000 ? '🟨' : '🟥').join('');
-            const text = `GeoCryptic Kartograph Challenge\nScore: ${totalScore.toLocaleString()} / 25,000 🌍\nStreak: ${gameState.streak} 🔥\n${grid}`;
+            const text = `GeoCryptic Day 2 Challenge\nScore: ${totalScore.toLocaleString()} / 25,000 🌍\nStreak: ${gameState.streak} 🔥\n${grid}`;
 
             const textArea = document.createElement("textarea");
             textArea.value = text;
